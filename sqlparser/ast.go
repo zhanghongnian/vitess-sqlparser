@@ -42,33 +42,36 @@ import (
 
 // Parse parses the sql and returns a Statement, which
 // is the AST representation of the query.
-func Parse(sql string) (Statement, error) {
+func Parse(sql string) (Statement, *Tokenizer, error) {
 	tokenizer := NewStringTokenizer(sql)
 	if yyParse(tokenizer) != 0 {
-		return nil, errors.New(tokenizer.LastError)
+		return nil, nil, errors.New(tokenizer.LastError)
 	}
 	ast := tokenizer.ParseTree
 	switch stmt := ast.(type) {
 	case *DDL:
 		stmts, err := tidbparser.New().Parse(sql, "", "")
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		return convertTiDBStmtToVitessDDL(stmts, stmt), nil
+		stmt2 := convertTiDBStmtToVitessDDL(stmts, stmt)
+		return stmt2, tokenizer, nil
 	case *Show:
 		stmts, err := tidbparser.New().Parse(sql, "", "")
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		return convertTiDBStmtToVitessShow(stmts, stmt), nil
+		stmt2 := convertTiDBStmtToVitessShow(stmts, stmt)
+		return stmt2, tokenizer, nil
 	case *OtherAdmin:
 		stmts, err := tidbparser.New().Parse(sql, "", "")
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		return convertTiDBStmtToVitessOtherAdmin(stmts, stmt), nil
+		stmt2 := convertTiDBStmtToVitessOtherAdmin(stmts, stmt)
+		return stmt2, tokenizer, nil
 	}
-	return ast, nil
+	return ast, tokenizer, nil
 }
 
 // SQLNode defines the interface for all nodes

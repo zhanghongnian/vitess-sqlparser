@@ -340,6 +340,11 @@ func (tkn *Tokenizer) Error(err string) {
 	tkn.LastError = buf.String()
 }
 
+// GetPosVarIndex get posVarIndex
+func (tkn *Tokenizer) GetPosVarIndex() int {
+	return tkn.posVarIndex
+}
+
 // Scan scans the tokenizer for the next token and returns
 // the token type and an optional value.
 func (tkn *Tokenizer) Scan() (int, []byte) {
